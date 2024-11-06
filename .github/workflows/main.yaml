@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      fronend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/frontend
-      backend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/backend
+      fronend_IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/frontend
+      backend_IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
