@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      fronend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/frontend:$GITHUB_SHA
-      backend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/backend:$GITHUB_SHA
+      fronend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/frontend
+      backend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -53,25 +53,25 @@ jobs:
       - name: Build and push fronend Docker image
         if: env.fronend_changed == 'true'
         run: |
-          docker build -t $fronend_IMAGE fronend/
-          docker push $fronend_IMAGE
+          docker build -t $fronend_IMAGE:$GITHUB_SHA fronend/
+          docker push $fronend_IMAGE:$GITHUB_SHA
 
       # Deploy fronend to Cloud Run if there are changes
       - name: Deploy fronend to Cloud Run
         if: env.fronend_changed == 'true'
         run: |
           BACKEND_URL=$(gcloud run services describe backend-cloudrun-service --region ${{ secrets.GCP_REGION }} --format="value(status.url)")
-          gcloud run deploy frontend-cloudrun-service --image $fronend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[BACKEND_URL=$BACKEND_URL]
+          gcloud run deploy frontend-cloudrun-service --image $fronend_IMAGE:$GITHUB_SHA --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[BACKEND_URL=$BACKEND_URL]
 
       # Build and push backend Docker image if there are changes
       - name: Build and push backend Docker image
         if: env.backend_changed == 'true'
         run: |
-          docker build -t $backend_IMAGE backend/
-          docker push $backend_IMAGE
+          docker build -t $backend_IMAGE:$GITHUB_SHA backend/
+          docker push $backend_IMAGE:$GITHUB_SHA
 
       # Deploy backend to Cloud Run if there are changes
       - name: Deploy backend to Cloud Run
         if: env.backend_changed == 'true'
         run: |
-          gcloud run deploy backend-cloudrun-service --image $backend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[DATABASE_URI=vivid-alchemy-436608-r0:us-central1:main-instance]
+          gcloud run deploy backend-cloudrun-service --image $backend_IMAGE:$GITHUB_SHA --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[DATABASE_URI=vivid-alchemy-436608-r0:us-central1:main-instance]
