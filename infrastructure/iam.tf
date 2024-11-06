@@ -11,7 +11,8 @@ locals {
     "roles/run.admin",                # Cloud Run Admin
     "roles/cloudsql.client",          # Cloud SQL Client
     "roles/clouddeploy.admin",        # Cloud Deploy Admin
-    "roles/cloudbuild.builds.editor"  # Cloud Build Editor
+    "roles/cloudbuild.builds.editor",  # Cloud Build Editor
+    "roles/iam.serviceAccountUser", # Cloud Run Impersonation
   ]
 }
 

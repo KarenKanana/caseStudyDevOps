@@ -16,6 +16,7 @@ jobs:
     env:
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
       SERVICE_ACCOUNT_KEY: ${{ secrets.GCP_SA_KEY }}
+      DATABASE_URI: ${{ secrets.DATABASE_URI }}
       fronend_IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/frontend
       backend_IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/backend
     steps:
@@ -61,7 +62,7 @@ jobs:
         if: env.fronend_changed == 'true'
         run: |
           BACKEND_URL=$(gcloud run services describe backend-cloudrun-service --region ${{ secrets.GCP_REGION }} --format="value(status.url)")
-          gcloud run deploy frontend-cloudrun-service --image $fronend_IMAGE:$GITHUB_SHA --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[BACKEND_URL=$BACKEND_URL] --service-account="general-sa@vivid-alchemy-436608-r0.iam.gserviceaccount.com"
+          gcloud run deploy frontend-cloudrun-service --image $fronend_IMAGE:$GITHUB_SHA --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=BACKEND_URL=$BACKEND_URL --service-account="general-sa@vivid-alchemy-436608-r0.iam.gserviceaccount.com"
 
       # Build and push backend Docker image if there are changes
       - name: Build and push backend Docker image
@@ -74,4 +75,4 @@ jobs:
       - name: Deploy backend to Cloud Run
         if: env.backend_changed == 'true'
         run: |
-          gcloud run deploy backend-cloudrun-service --image $backend_IMAGE:$GITHUB_SHA --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[DATABASE_URI=vivid-alchemy-436608-r0:us-central1:main-instance]
+          gcloud run deploy backend-cloudrun-service --image $backend_IMAGE:$GITHUB_SHA --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=DATABASE_URI=$DATABASE_URI

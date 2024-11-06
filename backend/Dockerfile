@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir flask flask_sqlalchemy flask_cors
 EXPOSE 8080
 
 # Define environment variable for SQLAlchemy URI (optional)
-ENV DATABASE_URI="sqlite:///messages.db"
+# ENV DATABASE_URI="sqlite:///messages.db
 
 # Run the application
 CMD ["python", "main.py"]
