@@ -45,7 +45,7 @@ jobs:
       - name: Build and push fronend Docker image
         if: env.fronend_changed == 'true'
         run: |
-          echo ${{ secrets.GCP_SA_KEY }} | docker login -u _json_key --password-stdin https://gcr.io
+          echo "${{ secrets.GCP_SA_KEY }}" | docker login -u _json_key --password-stdin https://gcr.io
           docker build -t $fronend_IMAGE fronend/
           docker push $fronend_IMAGE
 
@@ -53,22 +53,25 @@ jobs:
       - name: Deploy fronend to Cloud Run
         if: env.fronend_changed == 'true'
         run: |
-          gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
+          echo "${{ secrets.GCP_SA_KEY }}" > gcp-key.json
+          gcloud auth activate-service-account --key-file=gcp-key.json
           gcloud config set project $PROJECT_ID
-          gcloud run deploy fronend-app --image $fronend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated
+          BACKEND_URL=$(gcloud run services describe backend-cloudrun-service --region ${{ secrets.GCP_REGION }} --format="value(status.url)")
+          gcloud run deploy frontend-cloudrun-service --image $fronend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[BACKEND_URL=$BACKEND_URL]
 
       # Build and push backend Docker image if there are changes
       - name: Build and push backend Docker image
         if: env.backend_changed == 'true'
         run: |
+          echo "${{ secrets.GCP_SA_KEY }}" | docker login -u _json_key --password-stdin https://gcr.io
           docker build -t $backend_IMAGE backend/
-          echo ${{ secrets.GCP_SA_KEY }} | docker login -u _json_key --password-stdin https://gcr.io
           docker push $backend_IMAGE
 
       # Deploy backend to Cloud Run if there are changes
       - name: Deploy backend to Cloud Run
         if: env.backend_changed == 'true'
         run: |
-          gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
+          echo "${{ secrets.GCP_SA_KEY }}" > gcp-key.json
+          gcloud auth activate-service-account --key-file=gcp-key.json
           gcloud config set project $PROJECT_ID
-          gcloud run deploy backend-app --image $backend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated
+          gcloud run deploy backend-cloudrun-service --image $backend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[BACKEND_URL=$BACKEND_URL]
