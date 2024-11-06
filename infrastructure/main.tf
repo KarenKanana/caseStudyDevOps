@@ -22,19 +22,12 @@ resource "google_cloud_run_v2_service" "default" {
 }
 
 # Create artifact registry
-resource "google_artifact_registry_repository" "frontend" {
+resource "google_artifact_registry_repository" "applications" {
   location      = var.REGION
-  repository_id = "frontend"
-  description   = "frontend docker repository"
+  repository_id = "applications"
+  description   = "applications docker repository"
   format        = "DOCKER"
 
-}
-
-resource "google_artifact_registry_repository" "backend" {
-  location      = var.REGION
-  repository_id = "backend"
-  description   = "backend docker repository"
-  format        = "DOCKER"
 }
 
 # create cloud sql database

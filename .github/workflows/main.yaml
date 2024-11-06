@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      fronend_IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/frontend
-      backend_IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/backend
+      fronend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/frontend
+      backend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/backend
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -41,21 +41,25 @@ jobs:
             echo "backend_changed=true" >> $GITHUB_ENV
           fi
 
+      # Authenticate to GCP
+      - name: Authenticate to GCP
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" > gcp-key.json
+          gcloud auth activate-service-account --key-file 
+          gcloud config set project $PROJECT_ID
+          gcloud auth configure-docker ${{ secrets.GCP_REGION }}.pkg.dev
+        
       # Build and push fronend Docker image if there are changes
       - name: Build and push fronend Docker image
         if: env.fronend_changed == 'true'
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | docker login -u _json_key --password-stdin https://gcr.io
-          docker build -t $fronend_IMAGE fronend/
+          docker build -t $fronend_IMAGE:$GITHUB_SHA fronend/
           docker push $fronend_IMAGE
 
       # Deploy fronend to Cloud Run if there are changes
       - name: Deploy fronend to Cloud Run
         if: env.fronend_changed == 'true'
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" > gcp-key.json
-          gcloud auth activate-service-account --key-file=gcp-key.json
-          gcloud config set project $PROJECT_ID
           BACKEND_URL=$(gcloud run services describe backend-cloudrun-service --region ${{ secrets.GCP_REGION }} --format="value(status.url)")
           gcloud run deploy frontend-cloudrun-service --image $fronend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[BACKEND_URL=$BACKEND_URL]
 
@@ -63,15 +67,11 @@ jobs:
       - name: Build and push backend Docker image
         if: env.backend_changed == 'true'
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | docker login -u _json_key --password-stdin https://gcr.io
-          docker build -t $backend_IMAGE backend/
+          docker build -t $backend_IMAGE:GITHUB_SHA backend/
           docker push $backend_IMAGE
 
       # Deploy backend to Cloud Run if there are changes
       - name: Deploy backend to Cloud Run
         if: env.backend_changed == 'true'
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" > gcp-key.json
-          gcloud auth activate-service-account --key-file=gcp-key.json
-          gcloud config set project $PROJECT_ID
-          gcloud run deploy backend-cloudrun-service --image $backend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[BACKEND_URL=$BACKEND_URL]
+          gcloud run deploy backend-cloudrun-service --image $backend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=[DATABASE_URI=vivid-alchemy-436608-r0:us-central1:main-instance]
