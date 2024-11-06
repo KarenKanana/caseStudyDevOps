@@ -44,9 +44,9 @@ jobs:
       # Authenticate to GCP
       - name: Authenticate to GCP
         run: |
-          gcloud config set project $PROJECT_ID
           SERVICE_ACCOUNT_KEY=${{ secrets.GCP_SA_KEY }}
           echo "$SERVICE_ACCOUNT_KEY" > gcp_key.json
+          gcloud config set project $PROJECT_ID
           gcloud auth activate-service-account --key-file=gcp_key.json
           gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
       # Build and push fronend Docker image if there are changes
