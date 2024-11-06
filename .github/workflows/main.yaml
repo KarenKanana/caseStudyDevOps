@@ -1,0 +1,74 @@
+name: CI/CD for fronend and backend
+
+on:
+  push:
+    paths:
+      - 'fronend/**'
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'fronend/**'
+      - 'backend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      fronend_IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/frontend
+      backend_IMAGE: gcr.io/${{ secrets.GCP_PROJECT_ID }}/backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Determine changes in fronend
+      - name: Check if fronend has changed
+        id: fronend_changed
+        run: |
+          if git diff --quiet HEAD^ HEAD -- fronend/; then
+            echo "fronend_changed=false" >> $GITHUB_ENV
+          else
+            echo "fronend_changed=true" >> $GITHUB_ENV
+          fi
+
+      # Determine changes in backend
+      - name: Check if backend has changed
+        id: backend_changed
+        run: |
+          if git diff --quiet HEAD^ HEAD -- backend/; then
+            echo "backend_changed=false" >> $GITHUB_ENV
+          else
+            echo "backend_changed=true" >> $GITHUB_ENV
+          fi
+
+      # Build and push fronend Docker image if there are changes
+      - name: Build and push fronend Docker image
+        if: env.fronend_changed == 'true'
+        run: |
+          docker build -t $fronend_IMAGE fronend/
+          echo ${{ secrets.GCP_SA_KEY }} | docker login -u _json_key --password-stdin https://gcr.io
+          docker push $fronend_IMAGE
+
+      # Deploy fronend to Cloud Run if there are changes
+      - name: Deploy fronend to Cloud Run
+        if: env.fronend_changed == 'true'
+        run: |
+          gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
+          gcloud config set project $PROJECT_ID
+          gcloud run deploy fronend-app --image $fronend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated
+
+      # Build and push backend Docker image if there are changes
+      - name: Build and push backend Docker image
+        if: env.backend_changed == 'true'
+        run: |
+          docker build -t $backend_IMAGE backend/
+          echo ${{ secrets.GCP_SA_KEY }} | docker login -u _json_key --password-stdin https://gcr.io
+          docker push $backend_IMAGE
+
+      # Deploy backend to Cloud Run if there are changes
+      - name: Deploy backend to Cloud Run
+        if: env.backend_changed == 'true'
+        run: |
+          gcloud auth activate-service-account --key-file=${{ secrets.GCP_SA_KEY }}
+          gcloud config set project $PROJECT_ID
+          gcloud run deploy backend-app --image $backend_IMAGE --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated
