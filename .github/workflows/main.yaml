@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      fronend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/frontend
-      backend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/backend
+      fronend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/frontend:$GITHUB_SHA
+      backend_IMAGE: ${{ secrets.GCP_REGION }}.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/applications/backend:$GITHUB_SHA
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -53,7 +53,7 @@ jobs:
       - name: Build and push fronend Docker image
         if: env.fronend_changed == 'true'
         run: |
-          docker build -t $fronend_IMAGE:$GITHUB_SHA fronend/
+          docker build -t $fronend_IMAGE fronend/
           docker push $fronend_IMAGE
 
       # Deploy fronend to Cloud Run if there are changes
@@ -67,7 +67,7 @@ jobs:
       - name: Build and push backend Docker image
         if: env.backend_changed == 'true'
         run: |
-          docker build -t $backend_IMAGE:GITHUB_SHA backend/
+          docker build -t $backend_IMAGE backend/
           docker push $backend_IMAGE
 
       # Deploy backend to Cloud Run if there are changes
