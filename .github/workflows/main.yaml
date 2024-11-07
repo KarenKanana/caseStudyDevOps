@@ -62,8 +62,7 @@ jobs:
         if: env.fronend_changed == 'true'
         run: |
           BACKEND_URL=$(gcloud run services describe backend-cloudrun-service --region ${{ secrets.GCP_REGION }} --format="value(status.url)")
-          gcloud run deploy frontend-cloudrun-service --image $fronend_IMAGE:$GITHUB_SHA --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=REACT_APP_BACKEND_URL=$BACKEND_URL --service-account="general-sa@vivid-alchemy-436608-r0.iam.gserviceaccount.com"
-
+          gcloud run deploy frontend-cloudrun-service --image $fronend_IMAGE:$GITHUB_SHA --region ${{ secrets.GCP_REGION }} --platform managed --allow-unauthenticated --set-env-vars=REACT_APP_BACKEND_URL=$BACKEND_URL 
       # Build and push backend Docker image if there are changes
       - name: Build and push backend Docker image
         if: env.backend_changed == 'true'
