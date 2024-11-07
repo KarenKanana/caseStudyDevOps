@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install any dependencies specified in requirements.txt
-RUN pip install --no-cache-dir flask flask_sqlalchemy flask_cors
+RUN pip install --no-cache-dir flask flask_sqlalchemy flask_cors psycopg2-binary
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080
