@@ -43,5 +43,6 @@ def msg_get_api(msg_id):
     else:
         return jsonify({'error': 'Message not found'}), 404
 
+
 if __name__ == '__main__':  # Corrected '__name__' and '__main__' instead of '_name_' and '_main_'
     app.run(debug=True, host='0.0.0.0', port=8080)

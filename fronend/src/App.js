@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 
 // TODO: point frontend to backend url
-const BACKEND_URL = process.env.BACKEND_URL || "http://127.0.0.1:5000";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://127.0.0.1:5000";
 
 function App() {
   let [input, setInput] = React.useState('');

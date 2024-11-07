@@ -42,7 +42,8 @@ resource "google_sql_database_instance" "main" {
     tier = "db-f1-micro"
   }
   # username = postgres 
-  # passwd = 1qazZAQ!2wsxXSW@
+  # passwd = `g`A$U}KGs<ID3"/
   # dbname = postgres
   # dburl = vivid-alchemy-436608-r0:us-central1:main-instance
+  # uri = postgresql://postgres:`g`A$U}KGs<ID3"/@34.66.169.194:5432/postgres
 }
